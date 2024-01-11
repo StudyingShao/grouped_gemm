@@ -14,16 +14,17 @@ if __name__ == "__main__":
     # num_experts = 8
     # num_tokens = 4096 * 2
     # hidden = 2048
-
-    # num_experts = 64
-    # num_tokens = 32768
-    # hidden = 2048
     # inter = 2048 * 4
-    
+
     num_experts = 64
     num_tokens = 32768
-    hidden = 2048 * 4
-    inter = 2048
+    hidden = 2048
+    inter = 2048 * 4
+    
+    # num_experts = 64
+    # num_tokens = 32768
+    # hidden = 2048 * 4
+    # inter = 2048 * 4
 
     # num_experts = 128
     # num_tokens = 128 * 16
