@@ -11,6 +11,7 @@
 #include "moe/cutlass_kernels/th_utils.h"
 #include "ft_gemm_configs.h"
 
+extern int64_t global_gemm_config_id;
 
 namespace groupedgemmformoe {
 

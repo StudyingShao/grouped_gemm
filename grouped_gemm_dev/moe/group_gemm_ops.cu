@@ -23,6 +23,8 @@
 
 using torch::Tensor;
 
+int64_t global_gemm_config_id = 0;
+
 namespace torch_ext {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -474,6 +476,11 @@ std::tuple<torch::Tensor, std::vector<Tensor>> moe_recover_op(
     return std::make_tuple(original_output, workspace);
 }
 
+void moe_set_gemm_config(int64_t gemm_config_id)
+{
+    global_gemm_config_id = gemm_config_id;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // TORCH_LIBRARY
@@ -486,6 +493,7 @@ TORCH_LIBRARY(moe_unit_ops, m)
     m.def("moe_group_gemm_backward_op", moe_group_gemm_backward_op);
     m.def("moe_permute_op", moe_permute_op);
     m.def("moe_recover_op", moe_recover_op);
+    m.def("moe_set_gemm_config", moe_set_gemm_config);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

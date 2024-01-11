@@ -373,22 +373,10 @@ void dispatch_moe_gemm_to_cutlass(T*                A,
                                   cudaStream_t      stream,
                                   int*              occupancy = nullptr)
 {
-    switch (gemm_config.tile_config) {
-        case CutlassTileConfig::CtaShape32x128x64_WarpShape32x32x64:
-            dispatch_gemm_config<T, WeightType, arch,
-                                 cutlass::gemm::GemmShape<64, 128, 64>,
-                                 cutlass::gemm::GemmShape<32, 32, 64>>(A,
-                                                                       B,
-                                                                       C,
-                                                                       gemm_m_per_expert,
-                                                                       gemm_n,
-                                                                       gemm_k,
-                                                                       num_experts,
-                                                                       gemm_config,
-                                                                       stream,
-                                                                       occupancy);
-            break;
-        case CutlassTileConfig::CtaShape64x128x64_WarpShape32x64x64:
+    switch (global_gemm_config_id) 
+    {
+        case 1:
+            // printf("CtaShape64x128x64_WarpShape32x64x64\n");
             dispatch_gemm_config<T, WeightType, arch,
                                  cutlass::gemm::GemmShape<64, 128, 64>,
                                  cutlass::gemm::GemmShape<32, 64, 64>>(A,
@@ -402,9 +390,10 @@ void dispatch_moe_gemm_to_cutlass(T*                A,
                                                                        stream,
                                                                        occupancy);
             break;
-        case CutlassTileConfig::CtaShape128x128x64_WarpShape64x32x64:
+        case 2:
+            // printf("CtaShape128x64x64_WarpShape64x32x64\n");
             dispatch_gemm_config<T, WeightType, arch,
-                                 cutlass::gemm::GemmShape<128, 128, 64>,
+                                 cutlass::gemm::GemmShape<128, 64, 64>,
                                  cutlass::gemm::GemmShape<64, 32, 64>>(A,
                                                                        B,
                                                                        C,
@@ -416,18 +405,113 @@ void dispatch_moe_gemm_to_cutlass(T*                A,
                                                                        stream,
                                                                        occupancy);
             break;
-        case CutlassTileConfig::Undefined:
-            throw std::runtime_error("[FT Error][dispatch_moe_gemm_to_cutlass] gemm config undefined.");
+        case 3:
+            // printf("CtaShape128x128x32_WarpShape64x64x32\n");
+            dispatch_gemm_config<T, WeightType, arch,
+                                 cutlass::gemm::GemmShape<128, 128, 32>,
+                                 cutlass::gemm::GemmShape<64, 64, 32>>(A,
+                                                                       B,
+                                                                       C,
+                                                                       gemm_m_per_expert,
+                                                                       gemm_n,
+                                                                       gemm_k,
+                                                                       num_experts,
+                                                                       gemm_config,
+                                                                       stream,
+                                                                       occupancy);
             break;
-        case CutlassTileConfig::ChooseWithHeuristic:
-            throw std::runtime_error(
-                "[FT Error][dispatch_moe_gemm_to_cutlass] gemm config should have already been set by heuristic.");
+        case 4:
+            // printf("CtaShape128x64x32_WarpShape64x32x32\n");
+            dispatch_gemm_config<T, WeightType, arch,
+                                 cutlass::gemm::GemmShape<128, 64, 32>,
+                                 cutlass::gemm::GemmShape<64, 32, 32>>(A,
+                                                                       B,
+                                                                       C,
+                                                                       gemm_m_per_expert,
+                                                                       gemm_n,
+                                                                       gemm_k,
+                                                                       num_experts,
+                                                                       gemm_config,
+                                                                       stream,
+                                                                       occupancy);
+            break;
+        case 5:
+            // printf("CtaShape64x128x32_WarpShape32x64x32\n");
+            dispatch_gemm_config<T, WeightType, arch,
+                                 cutlass::gemm::GemmShape<64, 128, 32>,
+                                 cutlass::gemm::GemmShape<32, 64, 32>>(A,
+                                                                       B,
+                                                                       C,
+                                                                       gemm_m_per_expert,
+                                                                       gemm_n,
+                                                                       gemm_k,
+                                                                       num_experts,
+                                                                       gemm_config,
+                                                                       stream,
+                                                                       occupancy);
             break;
         default:
             throw std::runtime_error(
                 "[FT Error][dispatch_moe_gemm_to_cutlass] Config is invalid for same type MoE tensorop GEMM.");
             break;
     }
+
+
+    // switch (gemm_config.tile_config) {
+    //     case CutlassTileConfig::CtaShape32x128x64_WarpShape32x32x64:
+    //         dispatch_gemm_config<T, WeightType, arch,
+    //                              cutlass::gemm::GemmShape<64, 128, 64>,
+    //                              cutlass::gemm::GemmShape<32, 32, 64>>(A,
+    //                                                                    B,
+    //                                                                    C,
+    //                                                                    gemm_m_per_expert,
+    //                                                                    gemm_n,
+    //                                                                    gemm_k,
+    //                                                                    num_experts,
+    //                                                                    gemm_config,
+    //                                                                    stream,
+    //                                                                    occupancy);
+    //         break;
+    //     case CutlassTileConfig::CtaShape64x128x64_WarpShape32x64x64:
+    //         dispatch_gemm_config<T, WeightType, arch,
+    //                              cutlass::gemm::GemmShape<64, 128, 64>,
+    //                              cutlass::gemm::GemmShape<32, 64, 64>>(A,
+    //                                                                    B,
+    //                                                                    C,
+    //                                                                    gemm_m_per_expert,
+    //                                                                    gemm_n,
+    //                                                                    gemm_k,
+    //                                                                    num_experts,
+    //                                                                    gemm_config,
+    //                                                                    stream,
+    //                                                                    occupancy);
+    //         break;
+    //     case CutlassTileConfig::CtaShape128x128x64_WarpShape64x32x64:
+    //         dispatch_gemm_config<T, WeightType, arch,
+    //                              cutlass::gemm::GemmShape<128, 128, 64>,
+    //                              cutlass::gemm::GemmShape<64, 32, 64>>(A,
+    //                                                                    B,
+    //                                                                    C,
+    //                                                                    gemm_m_per_expert,
+    //                                                                    gemm_n,
+    //                                                                    gemm_k,
+    //                                                                    num_experts,
+    //                                                                    gemm_config,
+    //                                                                    stream,
+    //                                                                    occupancy);
+    //         break;
+    //     case CutlassTileConfig::Undefined:
+    //         throw std::runtime_error("[FT Error][dispatch_moe_gemm_to_cutlass] gemm config undefined.");
+    //         break;
+    //     case CutlassTileConfig::ChooseWithHeuristic:
+    //         throw std::runtime_error(
+    //             "[FT Error][dispatch_moe_gemm_to_cutlass] gemm config should have already been set by heuristic.");
+    //         break;
+    //     default:
+    //         throw std::runtime_error(
+    //             "[FT Error][dispatch_moe_gemm_to_cutlass] Config is invalid for same type MoE tensorop GEMM.");
+    //         break;
+    // }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +673,7 @@ void MoeGemmRunner<T, WeightType>::run_gemm(T*           A,
 
     CutlassGemmConfig    chosen_config   = estimate_best_config_from_occupancies(candidate_configs,
                                                                                  occupancies,
-                                                                                 num_tokens,
+                                                                                 num_tokens / num_experts,
                                                                                  gemm_n,
                                                                                  gemm_k,
                                                                                  num_experts,
