@@ -236,6 +236,15 @@ generic_moe_gemm_kernelLauncher<T, WeightType, false, cutlass::arch::Sm80, Threa
         case 10:
             GENERIC_MOE_GEMM_KERNEL_LAUNCHER(10);
             break;
+        case 11:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(11);
+            break;
+        case 12:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(12);
+            break;
+        case 13:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(13);
+            break;
         default:
             std::string err_msg = "dispatch_gemm_config does not support stages " + std::to_string(gemm_config.stages);
             throw std::runtime_error("[FT Error][MoE][dispatch_gemm_config] " + err_msg);
@@ -680,6 +689,8 @@ void MoeGemmRunner<T, WeightType>::run_gemm(T*           A,
     {
         // 处理异常的代码
         // std::cout << "Caught exception: " << ex.what() << std::endl;
+        std::cout << std::endl << "stage fail: " << global_gemm_config_id << "/" << global_gemm_stage_id << std::endl;
+
     }
 }
 

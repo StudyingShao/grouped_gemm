@@ -1,6 +1,7 @@
 import torch
 import triton
 import torch.cuda.nvtx as nvtx
+import sys
 
 # from grouped_gemm import permute, unpermute, groupedgemm
 from moe.ops import permute, unpermute, groupedgemm
@@ -19,6 +20,7 @@ class GEMM_CASE:
 if __name__ == "__main__":
   
   dtype = torch.bfloat16
+  # torch.cuda.set_device(1)
 
   gemm_cases = []
 
@@ -47,6 +49,11 @@ if __name__ == "__main__":
 
   for gemm_case in gemm_cases:
 
+    # # A100
+    # stages = [6, 6, 10, 13, 13]
+    # A10 or L40S
+    stages = [4, 4, 6, 8, 8]
+
     num_experts = gemm_case.num_experts
     num_tokens = gemm_case.num_tokens
     inter = gemm_case.inter
@@ -57,7 +64,8 @@ if __name__ == "__main__":
     for config_id in range(1, 6):
       print(f"{gemm_case.num_experts}/{gemm_case.num_tokens}/{gemm_case.inter}/{gemm_case.hidden}  ", end='')
       print(f"{config_id}  ", end='')
-      for stage_id in range(2, 11):
+
+      for stage_id in range(2, stages[config_id - 1] + 1):
         moe_set_gemm_config(config_id, stage_id)
 
         expert_for_rows = torch.randint(size=(num_tokens,), low=0, high=num_experts, dtype=torch.int32).cuda()
@@ -70,18 +78,20 @@ if __name__ == "__main__":
         weights = torch.randn([num_experts, hidden, inter], dtype=dtype, device="cuda")
         
         nvtx.range_push("warmups")
-        for _ in range(50):
+        for _ in range(10):
           gemm_output = groupedgemm(permuted_inputs, expert_for_rows, weights, num_experts)
         nvtx.range_pop()
   
         t = triton.testing.do_bench(lambda: groupedgemm(permuted_inputs, expert_for_rows, weights, num_experts))
         tflops = flops / 1e12 / (t / 1e3)
-        if tflops < 1000:
-          print(f"{tflops:.2f} ", end='')
-        else:
-          print("- ", end='')
+        print(f"{tflops:.2f} ", end='')
+
 
       print()
+      sys.stdout.flush()
+
+
+    # print(f"{gemm_case.num_experts}/{gemm_case.num_tokens}/{gemm_case.inter}/{gemm_case.hidden}  ", end='')
 
     # permuted_inputs = torch.randn([num_tokens, hidden], dtype=dtype, device="cuda")
     # weights = torch.randn([num_experts, hidden, inter], dtype=dtype, device="cuda")
@@ -90,6 +100,7 @@ if __name__ == "__main__":
     # t = triton.testing.do_bench(lambda: torch.bmm(permuted_inputs, weights))
     # tflops = flops / 1e12 / (t / 1e3)
     # print(f"Ref torch.bmm Perf: {tflops:.2f} TFLOPS, {tflops/312*100:.2f} %")
+    # sys.stdout.flush()
 
 
 
