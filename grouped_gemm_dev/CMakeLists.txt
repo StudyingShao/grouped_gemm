@@ -30,7 +30,6 @@ if (NOT _PYTHON_SUCCESS MATCHES 0)
 endif()
 list(APPEND CMAKE_PREFIX_PATH ${TORCH_DIR})
 message(STATUS "TORCH_DIR: ${TORCH_DIR}")
-find_package(Torch REQUIRED)
 
 find_package(CUDA REQUIRED)
 if(CUDA_FOUND)
@@ -58,6 +57,14 @@ if torch.cuda.is_available():
   else ()
     message (SEND_ERROR "GPU arch not supported!")
   endif()
+
+  string(SUBSTRING ${GPU_ARCH} 0 1 GPU_MAJOR_ARCH)
+  string(SUBSTRING ${GPU_ARCH} 1 1 GPU_MINOR_ARCH)
+  set(GPU_ARCH_TORCH "${GPU_MAJOR_ARCH}.${GPU_MINOR_ARCH}")
+
+  set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
+  set(TORCH_CUDA_ARCH_LIST ${GPU_ARCH_TORCH})
+  find_package(Torch REQUIRED)
 
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};-O0;-lineinfo;-lcudart;--expt-extended-lambda;--expt-relaxed-constexpr;--generate-code=arch=compute_${GPU_ARCH},code=sm_${GPU_ARCH};--use_fast_math;")
   message(STATUS "CUDA_INCLUDE_DIRS: ${CUDA_INCLUDE_DIRS}")
