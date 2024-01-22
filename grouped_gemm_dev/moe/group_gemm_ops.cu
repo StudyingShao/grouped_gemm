@@ -24,6 +24,7 @@
 using torch::Tensor;
 
 int64_t global_gemm_config_id = 0;
+int64_t global_gemm_stage_id = 0;
 
 namespace torch_ext {
 
@@ -476,9 +477,10 @@ std::tuple<torch::Tensor, std::vector<Tensor>> moe_recover_op(
     return std::make_tuple(original_output, workspace);
 }
 
-void moe_set_gemm_config(int64_t gemm_config_id)
+void moe_set_gemm_config(int64_t gemm_config_id, int64_t gemm_stage_id)
 {
     global_gemm_config_id = gemm_config_id;
+    global_gemm_stage_id = gemm_stage_id;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

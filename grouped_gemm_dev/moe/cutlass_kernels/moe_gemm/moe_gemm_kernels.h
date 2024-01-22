@@ -12,6 +12,7 @@
 #include "ft_gemm_configs.h"
 
 extern int64_t global_gemm_config_id;
+extern int64_t global_gemm_stage_id;
 
 namespace groupedgemmformoe {
 

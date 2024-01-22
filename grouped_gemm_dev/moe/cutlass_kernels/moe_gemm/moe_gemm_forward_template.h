@@ -203,57 +203,38 @@ void dispatch_gemm_config(
     cudaStream_t      stream,
     int*              occupancy = nullptr)
 {
-    switch (gemm_config.stages) {
+
+#define GENERIC_MOE_GEMM_KERNEL_LAUNCHER(STAGES) \
+generic_moe_gemm_kernelLauncher<T, WeightType, false, cutlass::arch::Sm80, ThreadblockShape, WarpShape, STAGES>(A, B, C, gemm_m_per_expert, gemm_n, gemm_k, num_experts, stream, occupancy)
+
+    // switch (gemm_config.stages) {
+    switch (global_gemm_stage_id) {
         case 2:
-            generic_moe_gemm_kernelLauncher<T,
-                                            WeightType,
-                                            false,
-                                            cutlass::arch::Sm80,
-                                            ThreadblockShape,
-                                            WarpShape,
-                                            2>(A,
-                                               B,
-                                               C,
-                                               gemm_m_per_expert,
-                                               gemm_n,
-                                               gemm_k,
-                                               num_experts,
-                                               stream,
-                                               occupancy);
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(2);
             break;
         case 3:
-            generic_moe_gemm_kernelLauncher<T,
-                                            WeightType,
-                                            false,
-                                            cutlass::arch::Sm80,
-                                            ThreadblockShape,
-                                            WarpShape,
-                                            3>(A,
-                                               B,
-                                               C,
-                                               gemm_m_per_expert,
-                                               gemm_n,
-                                               gemm_k,
-                                               num_experts,
-                                               stream,
-                                               occupancy);
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(3);
             break;
         case 4:
-            generic_moe_gemm_kernelLauncher<T,
-                                            WeightType,
-                                            false,
-                                            cutlass::arch::Sm80,
-                                            ThreadblockShape,
-                                            WarpShape,
-                                            4>(A,
-                                               B,
-                                               C,
-                                               gemm_m_per_expert,
-                                               gemm_n,
-                                               gemm_k,
-                                               num_experts,
-                                               stream,
-                                               occupancy);
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(4);
+            break;
+        case 5:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(5);
+            break;
+        case 6:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(6);
+            break;
+        case 7:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(7);
+            break;
+        case 8:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(8);
+            break;
+        case 9:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(9);
+            break;
+        case 10:
+            GENERIC_MOE_GEMM_KERNEL_LAUNCHER(10);
             break;
         default:
             std::string err_msg = "dispatch_gemm_config does not support stages " + std::to_string(gemm_config.stages);
@@ -655,7 +636,36 @@ void MoeGemmRunner<T, WeightType>::run_gemm(T*           A,
     std::vector<CutlassGemmConfig> candidate_configs = get_candidate_configs(sm_, is_weight_only, only_simt_configs);
     std::vector<int>               occupancies(candidate_configs.size());
 
-    for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
+    // for (size_t ii = 0; ii < candidate_configs.size(); ++ii) {
+    //     dispatch_to_arch(A,
+    //                      B,
+    //                      C,
+    //                      gemm_m_per_expert,
+    //                      gemm_n,
+    //                      gemm_k,
+    //                      num_experts,
+    //                      candidate_configs[ii],
+    //                      stream,
+    //                      &occupancies[ii]);
+    // }
+
+    // static constexpr int workspace_bytes = 0;  // No workspace for MoE GEMMs.
+    // static constexpr int split_k_limit   = 1;  // MoE GEMM does not support split-k.
+
+    // CutlassGemmConfig    chosen_config   = estimate_best_config_from_occupancies(candidate_configs,
+    //                                                                              occupancies,
+    //                                                                              num_tokens / num_experts,
+    //                                                                              gemm_n,
+    //                                                                              gemm_k,
+    //                                                                              num_experts,
+    //                                                                              split_k_limit,
+    //                                                                              workspace_bytes,
+    //                                                                              multi_processor_count_,
+    //                                                                              is_weight_only);
+
+    try
+    {
+        // 可能引发异常的代码
         dispatch_to_arch(A,
                          B,
                          C,
@@ -663,34 +673,14 @@ void MoeGemmRunner<T, WeightType>::run_gemm(T*           A,
                          gemm_n,
                          gemm_k,
                          num_experts,
-                         candidate_configs[ii],
-                         stream,
-                         &occupancies[ii]);
+                         CutlassGemmConfig(),
+                         stream);
     }
-
-    static constexpr int workspace_bytes = 0;  // No workspace for MoE GEMMs.
-    static constexpr int split_k_limit   = 1;  // MoE GEMM does not support split-k.
-
-    CutlassGemmConfig    chosen_config   = estimate_best_config_from_occupancies(candidate_configs,
-                                                                                 occupancies,
-                                                                                 num_tokens / num_experts,
-                                                                                 gemm_n,
-                                                                                 gemm_k,
-                                                                                 num_experts,
-                                                                                 split_k_limit,
-                                                                                 workspace_bytes,
-                                                                                 multi_processor_count_,
-                                                                                 is_weight_only);
-
-    dispatch_to_arch(A,
-                     B,
-                     C,
-                     gemm_m_per_expert,
-                     gemm_n,
-                     gemm_k,
-                     num_experts,
-                     chosen_config,
-                     stream);
+    catch (const std::exception &ex)
+    {
+        // 处理异常的代码
+        // std::cout << "Caught exception: " << ex.what() << std::endl;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
