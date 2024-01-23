@@ -690,7 +690,6 @@ void MoeGemmRunner<T, WeightType>::run_gemm(T*           A,
         // 处理异常的代码
         // std::cout << "Caught exception: " << ex.what() << std::endl;
         std::cout << std::endl << "stage fail: " << global_gemm_config_id << "/" << global_gemm_stage_id << std::endl;
-
     }
 }
 
